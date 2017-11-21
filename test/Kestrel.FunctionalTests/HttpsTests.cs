@@ -270,10 +270,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.FunctionalTests
                 {
                     options.Listen(new IPEndPoint(IPAddress.Loopback, 0), listenOptions =>
                     {
-                        listenOptions.UseHttps(new HttpsConnectionAdapterOptions
+                        listenOptions.UseHttps(o =>
                         {
-                            ServerCertificate = new X509Certificate2(TestResources.TestCertificatePath, "testPassword"),
-                            HandshakeTimeout = TimeSpan.FromSeconds(1)
+                            o.ServerCertificate = new X509Certificate2(TestResources.TestCertificatePath, "testPassword");
+                            o.HandshakeTimeout = TimeSpan.FromSeconds(1);
                         });
                     });
                 })

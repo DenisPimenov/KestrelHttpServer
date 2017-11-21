@@ -112,10 +112,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
             context.ListenOptions.Add(endpoint);
         }
 
-        internal static ListenOptions ParseAddress(string address, KestrelServerOptions serverOptions, IDefaultHttpsProvider defaultHttpsProvider)
+        internal static ListenOptions ParseAddress(string address, out bool https)
         {
             var parsedAddress = ServerAddress.FromUrl(address);
-            var https = false;
+            https = false;
 
             if (parsedAddress.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
             {
@@ -151,12 +151,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
                 options = new AnyIPListenOptions(parsedAddress.Port);
             }
 
-            if (https)
-            {
-                options.KestrelServerOptions = serverOptions;
-                defaultHttpsProvider.ConfigureHttps(options);
-            }
-
             return options;
         }
 
@@ -171,8 +165,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
             {
                 context.Logger.LogDebug(CoreStrings.BindingToDefaultAddress, Constants.DefaultServerAddress);
 
-                await ParseAddress(Constants.DefaultServerAddress, context.ServerOptions, context.DefaultHttpsProvider)
-                    .BindAsync(context).ConfigureAwait(false);
+                var options = ParseAddress(Constants.DefaultServerAddress, out var https);
+                options.KestrelServerOptions = context.ServerOptions;
+                context.ServerOptions.EndpointDefaults(options);
+                await options.BindAsync(context).ConfigureAwait(false);
             }
         }
 
@@ -242,8 +238,16 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
             {
                 foreach (var address in _addresses)
                 {
-                    await ParseAddress(address, context.ServerOptions, context.DefaultHttpsProvider)
-                        .BindAsync(context).ConfigureAwait(false);
+                    var options = ParseAddress(address, out var https);
+                    options.KestrelServerOptions = context.ServerOptions;
+                    context.ServerOptions.EndpointDefaults(options);
+
+                    if (https)
+                    {
+                        context.DefaultHttpsProvider.ConfigureHttps(options);
+                    }
+
+                    await options.BindAsync(context).ConfigureAwait(false);
                 }
             }
         }

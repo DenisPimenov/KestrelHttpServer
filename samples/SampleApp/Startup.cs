@@ -6,12 +6,17 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace SampleApp
@@ -48,12 +53,40 @@ namespace SampleApp
                 {
                     factory.AddConsole();
                 })
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    var env = hostingContext.HostingEnvironment;
+                    config.AddJsonFile("appsettings.json", optional: true)
+                          .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
+                })
                 .UseKestrel((context, options) =>
                 {
-                    var basePort = context.Configuration.GetValue<int?>("BASE_PORT") ?? 5000;
+                    ShowConfig(context.Configuration);
+
+                    options.ConfigureEndpointDefaults(opt =>
+                    {
+                        opt.Protocols = HttpProtocols.Http1;
+                    });
+
+                    options.ConfigureHttpsDefaults(httpsOptions =>
+                    {
+                        httpsOptions.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
+                    });
+
+                    options.Configure(context.Configuration.GetSection("Kestrel"))
+                        .Endpoint("NamedEndpoint", opt =>
+                        {
+                            opt.Listener.Protocols = HttpProtocols.Http1;
+                        })
+                        .Endpoint("NamedHttpsEndpoint", opt =>
+                        {
+                            opt.Https.SslProtocols = SslProtocols.Tls12;
+                        });
 
                     // Run callbacks on the transport thread
                     options.ApplicationSchedulingMode = SchedulingMode.Inline;
+
+                    var basePort = context.Configuration.GetValue<int?>("BASE_PORT") ?? 5000;
 
                     options.Listen(IPAddress.Loopback, basePort, listenOptions =>
                     {
@@ -71,7 +104,7 @@ namespace SampleApp
 
                     options.ListenLocalhost(basePort + 2, listenOptions =>
                     {
-                        listenOptions.UseHttps("testCert.pfx", "testPassword");
+                        listenOptions.UseHttps(StoreLocation.CurrentUser, StoreName.My, "aspnet.test");
                     });
 
                     options.ListenAnyIP(basePort + 3);
@@ -95,6 +128,15 @@ namespace SampleApp
             }
                 
             return hostBuilder.Build().RunAsync();
+        }
+
+        private static void ShowConfig(IConfiguration config)
+        {
+            foreach (var pair in config.GetChildren())
+            {
+                Console.WriteLine($"{pair.Path} - {pair.Value}");
+                ShowConfig(pair);
+            }
         }
     }
 }

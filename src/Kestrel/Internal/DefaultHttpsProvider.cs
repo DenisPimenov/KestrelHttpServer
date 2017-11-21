@@ -25,8 +25,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Internal
 
         public void ConfigureHttps(ListenOptions listenOptions)
         {
-            var certificate = _certificateManager.ListCertificates(CertificatePurpose.HTTPS, StoreName.My, StoreLocation.CurrentUser, isValid: true)
-                .FirstOrDefault();
+            var certificate = GetDefaultCert();
             if (certificate != null)
             {
                 _logger.LocatedDevelopmentCertificate(certificate);
@@ -37,6 +36,12 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Internal
                 _logger.UnableToLocateDevelopmentCertificate();
                 throw new InvalidOperationException(KestrelStrings.HttpsUrlProvidedButNoDevelopmentCertificateFound);
             }
+        }
+
+        internal static X509Certificate2 GetDefaultCert()
+        {
+            return _certificateManager.ListCertificates(CertificatePurpose.HTTPS, StoreName.My, StoreLocation.CurrentUser, isValid: true)
+                .FirstOrDefault();
         }
     }
 }
