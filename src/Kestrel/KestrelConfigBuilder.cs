@@ -94,8 +94,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel
                     configureEndpoint(endpointConfig);
                 }
 
-                // TODO: What if configureEndpoint added Https directly to listenOptions? Should we no-op here?
-                if (endpointConfig.Https != null)
+                if (endpointConfig.Https != null && !listenOptions.ConnectionAdapters.Any(f => f.IsHttps))
                 {
                     // It's possible to get here with no cert configured. This will throw.
                     listenOptions.UseHttps(endpointConfig.Https);

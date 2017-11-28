@@ -242,7 +242,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
                     options.KestrelServerOptions = context.ServerOptions;
                     context.ServerOptions.EndpointDefaults(options);
 
-                    if (https)
+                    if (https && !options.ConnectionAdapters.Any(f => f.IsHttps))
                     {
                         context.DefaultHttpsProvider.ConfigureHttps(options);
                     }
