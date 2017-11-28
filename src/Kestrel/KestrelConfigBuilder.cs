@@ -115,7 +115,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel
             {
                 storeLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), location, ignoreCase: true);
             }
-            var validOnly = !certInfo.AllowInvalid ?? true;
+            var validOnly = !certInfo.AllowInvalid ?? false;
 
             return CertificateLoader.LoadFromStoreCert(subject, storeName, storeLocation, validOnly);
         }

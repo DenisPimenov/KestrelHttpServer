@@ -224,6 +224,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
 
         private void ValidateOptions()
         {
+            Options.ConfigurationBuilder?.Build();
+
             if (Options.Limits.MaxRequestBufferSize.HasValue &&
                 Options.Limits.MaxRequestBufferSize < Options.Limits.MaxRequestLineSize)
             {

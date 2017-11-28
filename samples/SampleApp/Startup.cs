@@ -70,7 +70,7 @@ namespace SampleApp
 
                     options.ConfigureHttpsDefaults(httpsOptions =>
                     {
-                        httpsOptions.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
+                        httpsOptions.SslProtocols = SslProtocols.Tls12;
                     });
 
                     options.Configure(context.Configuration.GetSection("Kestrel"))
