@@ -104,7 +104,7 @@ namespace SampleApp
 
                     options.ListenLocalhost(basePort + 2, listenOptions =>
                     {
-                        listenOptions.UseHttps(StoreLocation.CurrentUser, StoreName.My, "aspnet.test");
+                        listenOptions.UseHttps(StoreName.My, "aspnet.test", StoreLocation.CurrentUser);
                     });
 
                     options.ListenAnyIP(basePort + 3);

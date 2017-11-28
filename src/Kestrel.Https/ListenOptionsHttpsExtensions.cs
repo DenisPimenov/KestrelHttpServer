@@ -79,26 +79,16 @@ namespace Microsoft.AspNetCore.Hosting
             return listenOptions.UseHttps(new X509Certificate2(Path.Combine(env.ContentRootPath, fileName), password), configureHttps);
         }
 
-        public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string certName)
-            => listenOptions.UseHttps(StoreLocation.CurrentUser, storeName, certName);
+        public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject)
+            => listenOptions.UseHttps(storeName, subject, StoreLocation.CurrentUser);
 
-        public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreLocation location, StoreName storeName, string certName)
-            => listenOptions.UseHttps(location, storeName, certName, _ => { });
+        public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject, StoreLocation location)
+            => listenOptions.UseHttps(storeName, subject, location, allowInvalid: false, configureOptions: _ => { });
 
-        public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreLocation location, StoreName storeName, string certName,
+        public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject, StoreLocation location, bool allowInvalid,
             Action<HttpsConnectionAdapterOptions> configureOptions)
         {
-            using (var store = new X509Store(storeName, location))
-            {
-                store.Open(OpenFlags.ReadOnly);
-                var certs = store.Certificates.Find(X509FindType.FindBySubjectName, certName, validOnly: false);
-                if (certs.Count == 0)
-                {
-                    throw new FileNotFoundException("The certificate could not be found.", certName);
-                }
-
-                return listenOptions.UseHttps(certs[0], configureOptions);
-            }
+            return listenOptions.UseHttps(CertificateLoader.LoadFromStoreCert(subject, storeName.ToString(), location, !allowInvalid));
         }
 
         /// <summary>

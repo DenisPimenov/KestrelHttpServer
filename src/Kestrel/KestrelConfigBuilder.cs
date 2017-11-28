@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.AspNetCore.Server.Kestrel.Https.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -71,11 +72,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel
                     Options.GetHttpsDefaults()(httpsOptions);
 
                     var certInfo = new CertificateConfig(endpoint.CertConfig);
-                    if (certInfo.Exists)
+                    if (certInfo.IsFileCert)
                     {
-                        // TODO: Other formats like cert store
                         var env = Options.ApplicationServices.GetRequiredService<IHostingEnvironment>();
                         httpsOptions.ServerCertificate = new X509Certificate2(Path.Combine(env.ContentRootPath, certInfo.Path), certInfo.Password);
+                    }
+                    else if (certInfo.IsStoreCert)
+                    {
+                        httpsOptions.ServerCertificate = LoadFromStoreCert(certInfo);
                     }
                     else if (httpsOptions.ServerCertificate == null)
                     {
@@ -99,6 +103,21 @@ namespace Microsoft.AspNetCore.Server.Kestrel
 
                 Options.ListenOptions.Add(listenOptions);
             }
+        }
+
+        private static X509Certificate2 LoadFromStoreCert(CertificateConfig certInfo)
+        {
+            var subject = certInfo.Subject;
+            var storeName = certInfo.Store;
+            var location = certInfo.Location;
+            var storeLocation = StoreLocation.CurrentUser;
+            if (!string.IsNullOrEmpty(location))
+            {
+                storeLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), location, ignoreCase: true);
+            }
+            var validOnly = !certInfo.AllowInvalid ?? true;
+
+            return CertificateLoader.LoadFromStoreCert(subject, storeName, storeLocation, validOnly);
         }
     }
 }

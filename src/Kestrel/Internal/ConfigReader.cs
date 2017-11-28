@@ -91,9 +91,23 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
 
         public string Id => ConfigSection?.Key;
 
+        // File
+        public bool IsFileCert => !string.IsNullOrEmpty(Path);
+
         public string Path => ConfigSection?["Path"];
 
         public string Password => ConfigSection?["Password"];
 
+        // Cert store
+
+        public bool IsStoreCert => !string.IsNullOrEmpty(Subject);
+
+        public string Subject => ConfigSection?["Subject"];
+
+        public string Store => ConfigSection?["Store"];
+
+        public string Location => ConfigSection?["Location"];
+
+        public bool? AllowInvalid => ConfigSection?.GetSection("AllowInvalid")?.Get<bool?>();
     }
 }
