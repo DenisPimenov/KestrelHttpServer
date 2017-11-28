@@ -68,27 +68,52 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="password">
         /// The password required to access the X.509 certificate data.
         /// </param>
-        /// <param name="configureHttps"></param>
+        /// <param name="configureOptions">An Action to configure the <see cref="HttpsConnectionAdapterOptions"/>.</param>
         /// <returns>
         /// The <see cref="ListenOptions"/>.
         /// </returns>
         public static ListenOptions UseHttps(this ListenOptions listenOptions, string fileName, string password,
-            Action<HttpsConnectionAdapterOptions> configureHttps)
+            Action<HttpsConnectionAdapterOptions> configureOptions)
         {
             var env = listenOptions.KestrelServerOptions.ApplicationServices.GetRequiredService<IHostingEnvironment>();
-            return listenOptions.UseHttps(new X509Certificate2(Path.Combine(env.ContentRootPath, fileName), password), configureHttps);
+            return listenOptions.UseHttps(new X509Certificate2(Path.Combine(env.ContentRootPath, fileName), password), configureOptions);
         }
 
+        /// <summary>
+        /// Configure Kestrel to use HTTPS.
+        /// </summary>
+        /// <param name="listenOptions">The <see cref="ListenOptions"/> to configure.</param>
+        /// <param name="storeName">The certificate store to load the certificate from.</param>
+        /// <param name="subject">The subject name for the certificate to load.</param>
+        /// <returns>The <see cref="ListenOptions"/>.</returns>
         public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject)
             => listenOptions.UseHttps(storeName, subject, StoreLocation.CurrentUser);
 
+        /// <summary>
+        /// Configure Kestrel to use HTTPS.
+        /// </summary>
+        /// <param name="listenOptions">The <see cref="ListenOptions"/> to configure.</param>
+        /// <param name="storeName">The certificate store to load the certificate from.</param>
+        /// <param name="subject">The subject name for the certificate to load.</param>
+        /// <param name="location">The store location to load the certificate from.</param>
+        /// <returns>The <see cref="ListenOptions"/>.</returns>
         public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject, StoreLocation location)
             => listenOptions.UseHttps(storeName, subject, location, allowInvalid: true, configureOptions: _ => { });
 
+        /// <summary>
+        /// Configure Kestrel to use HTTPS.
+        /// </summary>
+        /// <param name="listenOptions">The <see cref="ListenOptions"/> to configure.</param>
+        /// <param name="storeName">The certificate store to load the certificate from.</param>
+        /// <param name="subject">The subject name for the certificate to load.</param>
+        /// <param name="location">The store location to load the certificate from.</param>
+        /// <param name="allowInvalid">Indicates if invalid certificates should be considered, such as self-signed certificates.</param>
+        /// <param name="configureOptions">An Action to configure the <see cref="HttpsConnectionAdapterOptions"/>.</param>
+        /// <returns>The <see cref="ListenOptions"/>.</returns>
         public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject, StoreLocation location, bool allowInvalid,
             Action<HttpsConnectionAdapterOptions> configureOptions)
         {
-            return listenOptions.UseHttps(CertificateLoader.LoadFromStoreCert(subject, storeName.ToString(), location, !allowInvalid));
+            return listenOptions.UseHttps(CertificateLoader.LoadFromStoreCert(subject, storeName.ToString(), location, !allowInvalid), configureOptions);
         }
 
         /// <summary>
@@ -145,20 +170,20 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="listenOptions">
         /// The <see cref="ListenOptions"/> to configure.
         /// </param>
-        /// <param name="configureHttps">An action to configure options for HTTPS.</param>
+        /// <param name="configureOptions">An action to configure options for HTTPS.</param>
         /// <returns>
         /// The <see cref="ListenOptions"/>.
         /// </returns>
-        public static ListenOptions UseHttps(this ListenOptions listenOptions, Action<HttpsConnectionAdapterOptions> configureHttps)
+        public static ListenOptions UseHttps(this ListenOptions listenOptions, Action<HttpsConnectionAdapterOptions> configureOptions)
         {
-            if (configureHttps == null)
+            if (configureOptions == null)
             {
-                throw new ArgumentNullException(nameof(configureHttps));
+                throw new ArgumentNullException(nameof(configureOptions));
             }
 
             var options = new HttpsConnectionAdapterOptions();
             listenOptions.KestrelServerOptions.GetHttpsDefaults()(options);
-            configureHttps(options);
+            configureOptions(options);
             return listenOptions.UseHttps(options);
         }
 

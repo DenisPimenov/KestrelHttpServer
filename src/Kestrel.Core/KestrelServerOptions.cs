@@ -63,8 +63,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
         /// </summary>
         public IKestrelConfigBuilder ConfigurationBuilder { get; set; }
 
+        /// <summary>
+        /// A default configuration action for all endpoints. Use for Listen, configuration, the default url, and URLs.
+        /// </summary>
         internal Action<ListenOptions> EndpointDefaults { get; set; } = _ => { };
 
+        /// <summary>
+        /// Used to flow settings for connection adapters and other extensions.
+        /// </summary>
         public IDictionary<string, object> AdapterData { get; } = new Dictionary<string, object>(0);
 
         /// <summary>
@@ -127,8 +133,16 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
             ListenOptions.Add(listenOptions);
         }
 
+        /// <summary>
+        /// Listens on ::1 and 127.0.0.1 with the given port. Requesting a dynamic port by specifying 0 is not supported
+        /// for this type of endpoint.
+        /// </summary>
         public void ListenLocalhost(int port) => ListenLocalhost(port, options => { });
 
+        /// <summary>
+        /// Listens on ::1 and 127.0.0.1 with the given port. Requesting a dynamic port by specifying 0 is not supported
+        /// for this type of endpoint.
+        /// </summary>
         public void ListenLocalhost(int port, Action<ListenOptions> configure)
         {
             if (configure == null)
@@ -145,8 +159,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
             ListenOptions.Add(listenOptions);
         }
 
+        /// <summary>
+        /// Listens on all IPs using IPv6 [::], or IPv4 0.0.0.0 if IPv6 is not supported.
+        /// </summary>
         public void ListenAnyIP(int port) => ListenAnyIP(port, options => { });
 
+        /// <summary>
+        /// Listens on all IPs using IPv6 [::], or IPv4 0.0.0.0 if IPv6 is not supported.
+        /// </summary>
         public void ListenAnyIP(int port, Action<ListenOptions> configure)
         {
             if (configure == null)
