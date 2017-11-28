@@ -52,7 +52,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel
         {
             if (Options.ConfigurationBuilder == null)
             {
-                // The builder has already been run.
+                // The builder has already been built.
                 return;
             }
             Options.ConfigurationBuilder = null;

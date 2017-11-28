@@ -23,7 +23,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Https.Internal
                 {
                     store.Open(OpenFlags.ReadOnly);
                     storeCertificates = store.Certificates;
-                    foundCertificates = storeCertificates.Find(X509FindType.FindBySubjectDistinguishedName, subject, validOnly);
+                    foundCertificates = storeCertificates.Find(X509FindType.FindBySubjectName, subject, validOnly);
                     foundCertificate = foundCertificates
                         .OfType<X509Certificate2>()
                         // TODO: EKU check

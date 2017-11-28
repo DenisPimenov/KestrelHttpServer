@@ -83,7 +83,7 @@ namespace Microsoft.AspNetCore.Hosting
             => listenOptions.UseHttps(storeName, subject, StoreLocation.CurrentUser);
 
         public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject, StoreLocation location)
-            => listenOptions.UseHttps(storeName, subject, location, allowInvalid: false, configureOptions: _ => { });
+            => listenOptions.UseHttps(storeName, subject, location, allowInvalid: true, configureOptions: _ => { });
 
         public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject, StoreLocation location, bool allowInvalid,
             Action<HttpsConnectionAdapterOptions> configureOptions)
