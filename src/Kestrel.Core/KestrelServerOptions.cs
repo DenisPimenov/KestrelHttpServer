@@ -61,7 +61,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
         /// Provides a configuration source where endpoints will be loaded from on server start.
         /// The default is null.
         /// </summary>
-        internal IKestrelConfigBuilder ConfigurationBuilder { get; set; }
+        public IKestrelConfigBuilder ConfigurationBuilder { get; set; }
 
         internal Action<ListenOptions> EndpointDefaults { get; set; } = _ => { };
 
