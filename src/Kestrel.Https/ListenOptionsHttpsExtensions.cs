@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.AspNetCore.Server.Kestrel.Https.Internal;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,18 @@ namespace Microsoft.AspNetCore.Hosting
     /// </summary>
     public static class ListenOptionsHttpsExtensions
     {
+        /// <summary>
+        /// Configure Kestrel to use HTTPS with the default development certificate.
+        /// </summary>
+        /// <param name="listenOptions">The <see cref="ListenOptions"/> to configure.</param>
+        /// <returns>The <see cref="ListenOptions"/>.</returns>
+        public static ListenOptions UseHttps(this ListenOptions listenOptions)
+        {
+            var httpsProvider = listenOptions.KestrelServerOptions.ApplicationServices.GetRequiredService<IDefaultHttpsProvider>();
+            httpsProvider.ConfigureHttps(listenOptions);
+            return listenOptions;
+        }
+
         /// <summary>
         /// Configure Kestrel to use HTTPS.
         /// </summary>

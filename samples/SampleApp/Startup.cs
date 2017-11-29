@@ -104,10 +104,16 @@ namespace SampleApp
 
                     options.ListenLocalhost(basePort + 2, listenOptions =>
                     {
-                        listenOptions.UseHttps(StoreName.My, "aspnet.test", StoreLocation.CurrentUser);
+                        // Use default dev cert
+                        listenOptions.UseHttps();
                     });
 
                     options.ListenAnyIP(basePort + 3);
+
+                    options.ListenAnyIP(basePort + 4, listenOptions =>
+                    {
+                        listenOptions.UseHttps(StoreName.My, "aspnet.test", StoreLocation.CurrentUser);
+                    });
 
                     options.UseSystemd();
 
