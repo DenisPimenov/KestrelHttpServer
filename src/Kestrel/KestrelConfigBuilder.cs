@@ -79,11 +79,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel
                     }
                     else if (certInfo.IsStoreCert)
                     {
+                        // TODO: Throw if the cert cannot be loaded, FileCert does.
                         httpsOptions.ServerCertificate = LoadFromStoreCert(certInfo);
                     }
                     else if (httpsOptions.ServerCertificate == null)
                     {
-                        httpsOptions.ServerCertificate = DefaultHttpsProvider.GetDefaultCert();
+                        var provider = Options.ApplicationServices.GetRequiredService<IDefaultHttpsProvider>();
+                        httpsOptions.ServerCertificate = provider.Certificate; // May be null
                     }
                 }
 

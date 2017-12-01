@@ -13,6 +13,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
         /// The IPEndPoint Kestrel will bind to if nothing else is specified.
         /// </summary>
         public static readonly string DefaultServerAddress = "http://localhost:5000";
+        public static readonly string DefaultServerHttpsAddress = "https://localhost:5001";
 
         /// <summary>
         /// Prefix of host name used to specify Unix sockets in the configuration.

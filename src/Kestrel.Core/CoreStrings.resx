@@ -465,4 +465,7 @@
   <data name="UnableToConfigureHttpsBindings" xml:space="preserve">
     <value>Unable to configure default https bindings because no IDefaultHttpsProvider service was provided.</value>
   </data>
+  <data name="BindingToDefaultAddresses" xml:space="preserve">
+    <value>No listening endpoints were configured. Binding to {address0} and {address1} by default.</value>
+  </data>
 </root>

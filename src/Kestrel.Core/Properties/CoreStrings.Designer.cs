@@ -621,6 +621,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
         }
 
         /// <summary>
+        /// No listening endpoints were configured. Binding to {address0} and {address1} by default.
+        /// </summary>
+        internal static string BindingToDefaultAddresses
+        {
+            get => GetString("BindingToDefaultAddresses");
+        }
+
+        /// <summary>
         /// No listening endpoints were configured. Binding to {address} by default.
         /// </summary>
         internal static string FormatBindingToDefaultAddress(object address)

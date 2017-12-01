@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -163,11 +164,32 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
         {
             public async Task BindAsync(AddressBindContext context)
             {
-                context.Logger.LogDebug(CoreStrings.BindingToDefaultAddress, Constants.DefaultServerAddress);
-
                 var options = ParseAddress(Constants.DefaultServerAddress, out var https);
                 options.KestrelServerOptions = context.ServerOptions;
                 context.ServerOptions.EndpointDefaults(options);
+                await options.BindAsync(context).ConfigureAwait(false);
+
+                // Conditional https default, only if a cert is available
+                options = ParseAddress(Constants.DefaultServerHttpsAddress, out https);
+                options.KestrelServerOptions = context.ServerOptions;
+                context.ServerOptions.EndpointDefaults(options);
+
+                if (!options.ConnectionAdapters.Any(f => f.IsHttps))
+                {
+                    try
+                    {
+                        context.DefaultHttpsProvider.ConfigureHttps(options);
+                    }
+                    catch (Exception)
+                    {
+                        // No default cert is available
+                        context.Logger.LogDebug(CoreStrings.BindingToDefaultAddress, Constants.DefaultServerAddress);
+                        return;
+                    }
+                }
+
+                context.Logger.LogDebug(CoreStrings.BindingToDefaultAddresses,
+                    Constants.DefaultServerAddress, Constants.DefaultServerHttpsAddress);
                 await options.BindAsync(context).ConfigureAwait(false);
             }
         }
@@ -259,6 +281,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
             private UnconfiguredDefaultHttpsProvider()
             {
             }
+
+            public X509Certificate2 Certificate => null;
 
             public void ConfigureHttps(ListenOptions listenOptions)
             {

@@ -23,25 +23,37 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Internal
             _logger = logger;
         }
 
+        public X509Certificate2 Certificate => GetDefaultCert();
+
         public void ConfigureHttps(ListenOptions listenOptions)
         {
-            var certificate = GetDefaultCert();
+            listenOptions.UseHttps(options =>
+            {
+                // ConfigureHttpsDefaults may have set the default cert.
+                if (options.ServerCertificate == null)
+                {
+                    options.ServerCertificate = GetDefaultCert();
+                    if (options.ServerCertificate == null)
+                    {
+                        throw new InvalidOperationException(KestrelStrings.HttpsUrlProvidedButNoDevelopmentCertificateFound);
+                    }
+                }
+            });
+        }
+
+        private X509Certificate2 GetDefaultCert()
+        {
+            var certificate = _certificateManager.ListCertificates(CertificatePurpose.HTTPS, StoreName.My, StoreLocation.CurrentUser, isValid: true)
+                .FirstOrDefault();
             if (certificate != null)
             {
                 _logger.LocatedDevelopmentCertificate(certificate);
-                listenOptions.UseHttps(certificate);
             }
             else
             {
                 _logger.UnableToLocateDevelopmentCertificate();
-                throw new InvalidOperationException(KestrelStrings.HttpsUrlProvidedButNoDevelopmentCertificateFound);
             }
-        }
-
-        internal static X509Certificate2 GetDefaultCert()
-        {
-            return _certificateManager.ListCertificates(CertificatePurpose.HTTPS, StoreName.My, StoreLocation.CurrentUser, isValid: true)
-                .FirstOrDefault();
+            return certificate;
         }
     }
 }
