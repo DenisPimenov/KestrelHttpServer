@@ -71,7 +71,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel
                     var certInfo = new CertificateConfig(endpoint.CertConfig);
                     if (certInfo.IsFileCert && certInfo.IsStoreCert)
                     {
-                        throw new InvalidOperationException($"The endpoint {endpoint.Name} specified multiple certificate sources.");
+                        throw new InvalidOperationException(KestrelStrings.FormatMultipleCertificateSources(endpoint.Name));
                     }
                     else if (certInfo.IsFileCert)
                     {

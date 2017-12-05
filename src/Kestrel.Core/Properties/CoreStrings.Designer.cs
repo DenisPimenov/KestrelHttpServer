@@ -621,14 +621,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
         }
 
         /// <summary>
-        /// No listening endpoints were configured. Binding to {address0} and {address1} by default.
-        /// </summary>
-        internal static string BindingToDefaultAddresses
-        {
-            get => GetString("BindingToDefaultAddresses");
-        }
-
-        /// <summary>
         /// No listening endpoints were configured. Binding to {address} by default.
         /// </summary>
         internal static string FormatBindingToDefaultAddress(object address)
@@ -1641,6 +1633,20 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
         /// </summary>
         internal static string FormatUnableToConfigureHttpsBindings()
             => GetString("UnableToConfigureHttpsBindings");
+
+        /// <summary>
+        /// No listening endpoints were configured. Binding to {address0} and {address1} by default.
+        /// </summary>
+        internal static string BindingToDefaultAddresses
+        {
+            get => GetString("BindingToDefaultAddresses");
+        }
+
+        /// <summary>
+        /// No listening endpoints were configured. Binding to {address0} and {address1} by default.
+        /// </summary>
+        internal static string FormatBindingToDefaultAddresses(object address0, object address1)
+            => string.Format(CultureInfo.CurrentCulture, GetString("BindingToDefaultAddresses", "address0", "address1"), address0, address1);
 
         private static string GetString(string name, params string[] formatterNames)
         {

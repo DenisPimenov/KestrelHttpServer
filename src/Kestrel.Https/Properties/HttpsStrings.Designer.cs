@@ -39,6 +39,20 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Https
             => GetString("AuthenticationTimedOut");
 
         /// <summary>
+        /// The requested certificate {subject} could not be found in {storeLocation}/{storeName}.
+        /// </summary>
+        internal static string CertNotFoundInStore
+        {
+            get => GetString("CertNotFoundInStore");
+        }
+
+        /// <summary>
+        /// The requested certificate {subject} could not be found in {storeLocation}/{storeName}.
+        /// </summary>
+        internal static string FormatCertNotFoundInStore(object subject, object storeLocation, object storeName)
+            => string.Format(CultureInfo.CurrentCulture, GetString("CertNotFoundInStore", "subject", "storeLocation", "storeName"), subject, storeLocation, storeName);
+
+        /// <summary>
         /// Certificate {thumbprint} cannot be used as an SSL server certificate. It has an Extended Key Usage extension but the usages do not include Server Authentication (OID 1.3.6.1.5.5.7.3.1).
         /// </summary>
         internal static string InvalidServerCertificateEku

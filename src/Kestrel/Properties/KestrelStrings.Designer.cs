@@ -24,6 +24,20 @@ namespace Microsoft.AspNetCore.Server.Kestrel
         internal static string FormatHttpsUrlProvidedButNoDevelopmentCertificateFound()
             => GetString("HttpsUrlProvidedButNoDevelopmentCertificateFound");
 
+        /// <summary>
+        /// The endpoint {endpointName} specified multiple certificate sources.
+        /// </summary>
+        internal static string MultipleCertificateSources
+        {
+            get => GetString("MultipleCertificateSources");
+        }
+
+        /// <summary>
+        /// The endpoint {endpointName} specified multiple certificate sources.
+        /// </summary>
+        internal static string FormatMultipleCertificateSources(object endpointName)
+            => string.Format(CultureInfo.CurrentCulture, GetString("MultipleCertificateSources", "endpointName"), endpointName);
+
         private static string GetString(string name, params string[] formatterNames)
         {
             var value = _resourceManager.GetString(name);

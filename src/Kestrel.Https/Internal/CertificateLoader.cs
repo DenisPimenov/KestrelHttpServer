@@ -36,7 +36,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Https.Internal
 
                     if (foundCertificate == null)
                     {
-                        throw new InvalidOperationException($"The requested certificate {subject} could not be found in {storeLocation}/{storeName}.");
+                        throw new InvalidOperationException(HttpsStrings.FormatCertNotFoundInStore(subject, storeLocation, storeName));
                     }
 
                     return foundCertificate;
