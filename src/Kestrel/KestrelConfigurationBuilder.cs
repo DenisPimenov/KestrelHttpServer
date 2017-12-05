@@ -11,20 +11,17 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.AspNetCore.Server.Kestrel.Https.Internal;
-using Microsoft.AspNetCore.Server.Kestrel.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.AspNetCore.Server.Kestrel
 {
-    public class KestrelConfigBuilder : IKestrelConfigBuilder
+    public class KestrelConfigurationBuilder : IKestrelConfigurationBuilder
     {
-        internal KestrelConfigBuilder(KestrelServerOptions options, IConfiguration configuration)
+        internal KestrelConfigurationBuilder(KestrelServerOptions options, IConfiguration configuration)
         {
             Options = options ?? throw new ArgumentNullException(nameof(options));
             Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-
-            Options.ConfigurationBuilder = this;
         }
 
         public KestrelServerOptions Options { get; }
@@ -37,7 +34,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel
         /// </summary>
         /// <param name="name"></param>
         /// <param name="configureOptions"></param>
-        public KestrelConfigBuilder Endpoint(string name, Action<EndpointConfiguration> configureOptions)
+        public KestrelConfigurationBuilder Endpoint(string name, Action<EndpointConfiguration> configureOptions)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -57,7 +54,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel
             }
             Options.ConfigurationBuilder = null;
 
-            var configReader = new ConfigReader(Configuration);
+            var configReader = new ConfigurationReader(Configuration);
             
             foreach (var endpoint in configReader.Endpoints)
             {
@@ -72,7 +69,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel
                     Options.GetHttpsDefaults()(httpsOptions);
 
                     var certInfo = new CertificateConfig(endpoint.CertConfig);
-                    if (certInfo.IsFileCert)
+                    if (certInfo.IsFileCert && certInfo.IsStoreCert)
+                    {
+                        throw new InvalidOperationException($"The endpoint {endpoint.Name} specified multiple certificate sources.");
+                    }
+                    else if (certInfo.IsFileCert)
                     {
                         var env = Options.ApplicationServices.GetRequiredService<IHostingEnvironment>();
                         httpsOptions.ServerCertificate = new X509Certificate2(Path.Combine(env.ContentRootPath, certInfo.Path), certInfo.Password);
@@ -85,7 +86,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel
                     else if (httpsOptions.ServerCertificate == null)
                     {
                         var provider = Options.ApplicationServices.GetRequiredService<IDefaultHttpsProvider>();
-                        httpsOptions.ServerCertificate = provider.Certificate; // May be null
+                        httpsOptions.ServerCertificate = provider.Certificate; // May be null, TODO: Throw
                     }
                 }
 
@@ -96,9 +97,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel
                     configureEndpoint(endpointConfig);
                 }
 
-                if (endpointConfig.Https != null && !listenOptions.ConnectionAdapters.Any(f => f.IsHttps))
+                // EndpointDefaults or configureEndpoint may have specified an https adapter.
+                if (https && !listenOptions.ConnectionAdapters.Any(f => f.IsHttps))
                 {
-                    // It's possible to get here with no cert configured. This will throw.
+                    // TODO: It's possible to get here with no cert configured. This will throw.
                     listenOptions.UseHttps(endpointConfig.Https);
                 }
 

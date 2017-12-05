@@ -73,7 +73,9 @@ namespace SampleApp
                         httpsOptions.SslProtocols = SslProtocols.Tls12;
                     });
 
-                    options.Configure(context.Configuration.GetSection("Kestrel"))
+                    options
+                        //.Configure()
+                        .Configure(context.Configuration.GetSection("Kestrel"))
                         .Endpoint("NamedEndpoint", opt =>
                         {
                             opt.Listener.Protocols = HttpProtocols.Http1;
@@ -81,7 +83,15 @@ namespace SampleApp
                         .Endpoint("NamedHttpsEndpoint", opt =>
                         {
                             opt.Https.SslProtocols = SslProtocols.Tls12;
-                        });
+                        })
+                        /*
+                        .Endpoint(IPAddress.Loopback, basePort, options =>
+                        {
+                        })
+                        .LocalhostEndpoint(basePort, options =>
+                        {
+                        })*/
+                        ;
 
                     // Run callbacks on the transport thread
                     options.ApplicationSchedulingMode = SchedulingMode.Inline;

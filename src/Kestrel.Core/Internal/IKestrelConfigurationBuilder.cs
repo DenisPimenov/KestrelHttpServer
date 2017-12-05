@@ -3,7 +3,7 @@
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
 {
-    public interface IKestrelConfigBuilder
+    public interface IKestrelConfigurationBuilder
     {
         void Build();
     }

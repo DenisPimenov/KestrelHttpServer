@@ -7,12 +7,12 @@ using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
 {
-    internal class ConfigReader
+    internal class ConfigurationReader
     {
         private IConfiguration _configuration;
         private IList<EndpointConfig> _endpoints;
 
-        public ConfigReader(IConfiguration configuration)
+        public ConfigurationReader(IConfiguration configuration)
         {
             // May be null
             _configuration = configuration;
@@ -43,15 +43,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
             var endpointsConfig = _configuration.GetSection("Endpoints").GetChildren();
             foreach (var endpointConfig in endpointsConfig)
             {
-                /*
-                 "EndpointName": {
-                    "Url": "https://*:5463",
-                    "Certificate": {
-                        "Path": "testCert.pfx",
-                        "Password": "testPassword"
-                    }
-                }
-                */
+                // "EndpointName": {
+                //    "Url": "https://*:5463",
+                //    "Certificate": {
+                //        "Path": "testCert.pfx",
+                //        "Password": "testPassword"
+                //    }
+                // }
+                
                 var url = endpointConfig["Url"];
                 if (string.IsNullOrEmpty(url))
                 {

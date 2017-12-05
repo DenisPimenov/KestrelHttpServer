@@ -7,9 +7,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
 {
     public static class KestrelServerOptionsConfigurationExtensions
     {
-        public static KestrelConfigBuilder Configure(this KestrelServerOptions options, IConfiguration config)
+        public static KestrelConfigurationBuilder Configure(this KestrelServerOptions options, IConfiguration config)
         {
-            return new KestrelConfigBuilder(options, config); // Assigns itself to options.ConfigurationBuilder
+            var builder = new KestrelConfigurationBuilder(options, config);
+            options.ConfigurationBuilder = builder;
+            return builder;
         }
     }
 }
