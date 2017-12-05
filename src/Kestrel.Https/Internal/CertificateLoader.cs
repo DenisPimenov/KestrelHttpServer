@@ -15,7 +15,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Https.Internal
         // Indicates that a certificate can be used as a SSL server certificate
         private const string ServerAuthenticationOid = "1.3.6.1.5.5.7.3.1";
 
-        public static X509Certificate2 LoadFromStoreCert(string subject, string storeName, StoreLocation storeLocation, bool validOnly)
+        public static X509Certificate2 LoadFromStoreCert(string subject, string storeName, StoreLocation storeLocation, bool allowInvalid)
         {
             using (var store = new X509Store(storeName, storeLocation))
             {
@@ -27,7 +27,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Https.Internal
                 {
                     store.Open(OpenFlags.ReadOnly);
                     storeCertificates = store.Certificates;
-                    foundCertificates = storeCertificates.Find(X509FindType.FindBySubjectName, subject, validOnly);
+                    foundCertificates = storeCertificates.Find(X509FindType.FindBySubjectName, subject, !allowInvalid);
                     foundCertificate = foundCertificates
                         .OfType<X509Certificate2>()
                         .Where(IsCertificateAllowedForServerAuth)
@@ -36,7 +36,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Https.Internal
 
                     if (foundCertificate == null)
                     {
-                        throw new InvalidOperationException(HttpsStrings.FormatCertNotFoundInStore(subject, storeLocation, storeName));
+                        throw new InvalidOperationException(HttpsStrings.FormatCertNotFoundInStore(subject, storeLocation, storeName, allowInvalid));
                     }
 
                     return foundCertificate;

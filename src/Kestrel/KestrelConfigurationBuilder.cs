@@ -80,13 +80,12 @@ namespace Microsoft.AspNetCore.Server.Kestrel
                     }
                     else if (certInfo.IsStoreCert)
                     {
-                        // TODO: Throw if the cert cannot be loaded, FileCert does.
                         httpsOptions.ServerCertificate = LoadFromStoreCert(certInfo);
                     }
                     else if (httpsOptions.ServerCertificate == null)
                     {
                         var provider = Options.ApplicationServices.GetRequiredService<IDefaultHttpsProvider>();
-                        httpsOptions.ServerCertificate = provider.Certificate; // May be null, TODO: Throw
+                        httpsOptions.ServerCertificate = provider.Certificate; // May be null
                     }
                 }
 
@@ -100,7 +99,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel
                 // EndpointDefaults or configureEndpoint may have specified an https adapter.
                 if (https && !listenOptions.ConnectionAdapters.Any(f => f.IsHttps))
                 {
-                    // TODO: It's possible to get here with no cert configured. This will throw.
+                    // It's possible to get here with no cert configured if the default is missing. This will throw.
                     listenOptions.UseHttps(endpointConfig.Https);
                 }
 
@@ -118,9 +117,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel
             {
                 storeLocation = (StoreLocation)Enum.Parse(typeof(StoreLocation), location, ignoreCase: true);
             }
-            var validOnly = !certInfo.AllowInvalid ?? false;
+            var allowInvalid = certInfo.AllowInvalid ?? false;
 
-            return CertificateLoader.LoadFromStoreCert(subject, storeName, storeLocation, validOnly);
+            return CertificateLoader.LoadFromStoreCert(subject, storeName, storeLocation, allowInvalid);
         }
     }
 }

@@ -91,7 +91,19 @@ namespace Microsoft.AspNetCore.Hosting
         /// <param name="location">The store location to load the certificate from.</param>
         /// <returns>The <see cref="ListenOptions"/>.</returns>
         public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject, StoreLocation location)
-            => listenOptions.UseHttps(storeName, subject, location, allowInvalid: true, configureOptions: _ => { });
+            => listenOptions.UseHttps(storeName, subject, location, allowInvalid: false, configureOptions: _ => { });
+
+        /// <summary>
+        /// Configure Kestrel to use HTTPS.
+        /// </summary>
+        /// <param name="listenOptions">The <see cref="ListenOptions"/> to configure.</param>
+        /// <param name="storeName">The certificate store to load the certificate from.</param>
+        /// <param name="subject">The subject name for the certificate to load.</param>
+        /// <param name="location">The store location to load the certificate from.</param>
+        /// <param name="allowInvalid">Indicates if invalid certificates should be considered, such as self-signed certificates.</param>
+        /// <returns>The <see cref="ListenOptions"/>.</returns>
+        public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject, StoreLocation location, bool allowInvalid)
+            => listenOptions.UseHttps(storeName, subject, location, allowInvalid, configureOptions: _ => { });
 
         /// <summary>
         /// Configure Kestrel to use HTTPS.
@@ -106,7 +118,7 @@ namespace Microsoft.AspNetCore.Hosting
         public static ListenOptions UseHttps(this ListenOptions listenOptions, StoreName storeName, string subject, StoreLocation location, bool allowInvalid,
             Action<HttpsConnectionAdapterOptions> configureOptions)
         {
-            return listenOptions.UseHttps(CertificateLoader.LoadFromStoreCert(subject, storeName.ToString(), location, !allowInvalid), configureOptions);
+            return listenOptions.UseHttps(CertificateLoader.LoadFromStoreCert(subject, storeName.ToString(), location, allowInvalid), configureOptions);
         }
 
         /// <summary>
