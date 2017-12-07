@@ -63,6 +63,8 @@ namespace SampleApp
                 {
                     ShowConfig(context.Configuration);
 
+                    var basePort = context.Configuration.GetValue<int?>("BASE_PORT") ?? 5000;
+
                     options.ConfigureEndpointDefaults(opt =>
                     {
                         opt.Protocols = HttpProtocols.Http1;
@@ -73,30 +75,8 @@ namespace SampleApp
                         httpsOptions.SslProtocols = SslProtocols.Tls12;
                     });
 
-                    options
-                        //.Configure()
-                        .Configure(context.Configuration.GetSection("Kestrel"))
-                        .Endpoint("NamedEndpoint", opt =>
-                        {
-                            opt.Listener.Protocols = HttpProtocols.Http1;
-                        })
-                        .Endpoint("NamedHttpsEndpoint", opt =>
-                        {
-                            opt.Https.SslProtocols = SslProtocols.Tls12;
-                        })
-                        /*
-                        .Endpoint(IPAddress.Loopback, basePort, options =>
-                        {
-                        })
-                        .LocalhostEndpoint(basePort, options =>
-                        {
-                        })*/
-                        ;
-
                     // Run callbacks on the transport thread
                     options.ApplicationSchedulingMode = SchedulingMode.Inline;
-
-                    var basePort = context.Configuration.GetValue<int?>("BASE_PORT") ?? 5000;
 
                     options.Listen(IPAddress.Loopback, basePort, listenOptions =>
                     {
@@ -124,6 +104,23 @@ namespace SampleApp
                     {
                         listenOptions.UseHttps(StoreName.My, "aspnet.test", StoreLocation.CurrentUser, allowInvalid: true);
                     });
+
+                    options
+                        .Configure()
+                        .Endpoint(IPAddress.Loopback, basePort + 5)
+                        .LocalhostEndpoint(basePort + 6)
+                        .Build();
+
+                    options
+                        .Configure(context.Configuration.GetSection("Kestrel"))
+                        .Endpoint("NamedEndpoint", opt =>
+                        {
+                            opt.Listener.Protocols = HttpProtocols.Http1;
+                        })
+                        .Endpoint("NamedHttpsEndpoint", opt =>
+                        {
+                            opt.Https.SslProtocols = SslProtocols.Tls12;
+                        });
 
                     options.UseSystemd();
 
