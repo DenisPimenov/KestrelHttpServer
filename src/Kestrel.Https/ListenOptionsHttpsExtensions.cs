@@ -171,6 +171,7 @@ namespace Microsoft.AspNetCore.Hosting
             }
 
             var options = new HttpsConnectionAdapterOptions();
+            options.ServerCertificate = listenOptions.KestrelServerOptions.GetOverriddenDefaultCertificate();
             listenOptions.KestrelServerOptions.GetHttpsDefaults()(options);
             configureOptions(options);
             return listenOptions.UseHttps(options);

@@ -55,6 +55,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel
             Options.ConfigurationBuilder = null;
 
             var configReader = new ConfigurationReader(Configuration);
+
+            LoadDefaultCert(configReader);
             
             foreach (var endpoint in configReader.Endpoints)
             {
@@ -62,34 +64,22 @@ namespace Microsoft.AspNetCore.Server.Kestrel
                 listenOptions.KestrelServerOptions = Options;
                 Options.EndpointDefaults(listenOptions);
 
-                HttpsConnectionAdapterOptions httpsOptions = null;
+                var httpsOptions = new HttpsConnectionAdapterOptions();
                 if (https)
                 {
-                    httpsOptions = new HttpsConnectionAdapterOptions();
+                    httpsOptions.ServerCertificate = listenOptions.KestrelServerOptions.GetOverriddenDefaultCertificate();
                     Options.GetHttpsDefaults()(httpsOptions);
 
                     var certInfo = new CertificateConfig(endpoint.CertConfig);
-                    if (certInfo.IsFileCert && certInfo.IsStoreCert)
-                    {
-                        throw new InvalidOperationException(KestrelStrings.FormatMultipleCertificateSources(endpoint.Name));
-                    }
-                    else if (certInfo.IsFileCert)
-                    {
-                        var env = Options.ApplicationServices.GetRequiredService<IHostingEnvironment>();
-                        httpsOptions.ServerCertificate = new X509Certificate2(Path.Combine(env.ContentRootPath, certInfo.Path), certInfo.Password);
-                    }
-                    else if (certInfo.IsStoreCert)
-                    {
-                        httpsOptions.ServerCertificate = LoadFromStoreCert(certInfo);
-                    }
-                    else if (httpsOptions.ServerCertificate == null)
+                    httpsOptions.ServerCertificate = LoadCertificate(certInfo, endpoint.Name);
+                    if (httpsOptions.ServerCertificate == null)
                     {
                         var provider = Options.ApplicationServices.GetRequiredService<IDefaultHttpsProvider>();
                         httpsOptions.ServerCertificate = provider.Certificate; // May be null
                     }
                 }
 
-                var endpointConfig = new EndpointConfiguration(listenOptions, httpsOptions, endpoint.ConfigSection);
+                var endpointConfig = new EndpointConfiguration(https, listenOptions, httpsOptions, endpoint.ConfigSection);
 
                 if (EndpointConfigurations.TryGetValue(endpoint.Name, out var configureEndpoint))
                 {
@@ -105,6 +95,36 @@ namespace Microsoft.AspNetCore.Server.Kestrel
 
                 Options.ListenOptions.Add(listenOptions);
             }
+        private void LoadDefaultCert(ConfigurationReader configReader)
+        {
+            var defaultCertConfig = configReader.Certificates
+                .Where(cert => string.Equals("Default", cert.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            if (defaultCertConfig != null)
+            {
+                var defaultCert = LoadCertificate(defaultCertConfig, "Default");
+                if (defaultCert != null)
+                {
+                    Options.OverrideDefaultCertificate(defaultCert);
+                }
+            }
+        }
+
+        private X509Certificate2 LoadCertificate(CertificateConfig certInfo, string endpointName)
+        {
+            if (certInfo.IsFileCert && certInfo.IsStoreCert)
+            {
+                throw new InvalidOperationException(KestrelStrings.FormatMultipleCertificateSources(endpointName));
+            }
+            else if (certInfo.IsFileCert)
+            {
+                var env = Options.ApplicationServices.GetRequiredService<IHostingEnvironment>();
+                return new X509Certificate2(Path.Combine(env.ContentRootPath, certInfo.Path), certInfo.Password);
+            }
+            else if (certInfo.IsStoreCert)
+            {
+                return LoadFromStoreCert(certInfo);
+            }
+            return null;
         }
 
         private static X509Certificate2 LoadFromStoreCert(CertificateConfig certInfo)

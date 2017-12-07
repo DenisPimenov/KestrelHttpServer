@@ -10,12 +10,26 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
     internal class ConfigurationReader
     {
         private IConfiguration _configuration;
+        private IList<CertificateConfig> _certificates;
         private IList<EndpointConfig> _endpoints;
 
         public ConfigurationReader(IConfiguration configuration)
         {
             // May be null
             _configuration = configuration;
+        }
+
+        public IEnumerable<CertificateConfig> Certificates
+        {
+            get
+            {
+                if (_certificates == null)
+                {
+                    ReadCertificates();
+                }
+
+                return _certificates;
+            }
         }
 
         public IEnumerable<EndpointConfig> Endpoints
@@ -28,6 +42,22 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
                 }
 
                 return _endpoints;
+            }
+        }
+
+        private void ReadCertificates()
+        {
+            _certificates = new List<CertificateConfig>();
+
+            if (_configuration == null)
+            {
+                return;
+            }
+
+            var certificatesConfig = _configuration.GetSection("Certificates").GetChildren();
+            foreach (var certificateConfig in certificatesConfig)
+            {
+                _certificates.Add(new CertificateConfig(certificateConfig));
             }
         }
 
@@ -78,6 +108,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
         public IConfigurationSection CertConfig { get; set; }
     }
 
+    // "CertificateName": {
+    //      "Path": "testCert.pfx",
+    //      "Password": "testPassword"
+    // }
     internal class CertificateConfig
     {
         public CertificateConfig(IConfigurationSection configSection)
@@ -86,6 +120,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
         }
 
         public IConfigurationSection ConfigSection { get; }
+
+        public string Name => ConfigSection.Key;
 
         public bool Exists => ConfigSection?.GetChildren().Any() ?? false;
 

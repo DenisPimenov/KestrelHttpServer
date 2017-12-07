@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Https
@@ -30,6 +31,30 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Https
                 return (Action<HttpsConnectionAdapterOptions>)action;
             }
             return _ => { };
+        }
+
+        /// <summary>
+        /// Used to override the default certificate for endpoints. This is for infrastructure use only.
+        /// </summary>
+        /// <param name="serverOptions"></param>
+        /// <param name="cert"></param>
+        public static void OverrideDefaultCertificate(this KestrelServerOptions serverOptions, X509Certificate2 cert)
+        {
+            serverOptions.AdapterData[nameof(OverrideDefaultCertificate)] = cert;
+        }
+
+        /// <summary>
+        /// Retrieves the overridden default certificate for applications. This is for infrastructure use only.
+        /// </summary>
+        /// <param name="serverOptions"></param>
+        /// <returns></returns>
+        public static X509Certificate2 GetOverriddenDefaultCertificate(this KestrelServerOptions serverOptions)
+        {
+            if (serverOptions.AdapterData.TryGetValue(nameof(OverrideDefaultCertificate), out var cert))
+            {
+                return (X509Certificate2)cert;
+            }
+            return null;
         }
     }
 }
