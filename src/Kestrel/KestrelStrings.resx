@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="EndpointMissingUrl" xml:space="preserve">
+    <value>The endpoint {endpointName} is missing the required 'Url' parameter.</value>
+  </data>
   <data name="HttpsUrlProvidedButNoDevelopmentCertificateFound" xml:space="preserve">
     <value>Unable to configure HTTPS endpoint. Try running 'dotnet developercertificates https -t' to setup a developer certificate for use with localhost. For information on configuring HTTPS see https://go.microsoft.com/fwlink/?linkid=848054</value>
   </data>

@@ -11,6 +11,20 @@ namespace Microsoft.AspNetCore.Server.Kestrel
             = new ResourceManager("Microsoft.AspNetCore.Server.Kestrel.KestrelStrings", typeof(KestrelStrings).GetTypeInfo().Assembly);
 
         /// <summary>
+        /// The endpoint {endpointName} is missing the required 'Url' parameter.
+        /// </summary>
+        internal static string EndpointMissingUrl
+        {
+            get => GetString("EndpointMissingUrl");
+        }
+
+        /// <summary>
+        /// The endpoint {endpointName} is missing the required 'Url' parameter.
+        /// </summary>
+        internal static string FormatEndpointMissingUrl(object endpointName)
+            => string.Format(CultureInfo.CurrentCulture, GetString("EndpointMissingUrl", "endpointName"), endpointName);
+
+        /// <summary>
         /// Unable to configure HTTPS endpoint. Try running 'dotnet developercertificates https -t' to setup a developer certificate for use with localhost. For information on configuring HTTPS see https://go.microsoft.com/fwlink/?linkid=848054
         /// </summary>
         internal static string HttpsUrlProvidedButNoDevelopmentCertificateFound
