@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.AspNetCore.Server.Kestrel.Https.Internal;
 using Microsoft.AspNetCore.Testing;
@@ -26,6 +27,53 @@ namespace Microsoft.AspNetCore.Server.Kestrel.FunctionalTests
 {
     public class HttpsTests
     {
+        private KestrelServerOptions CreateServerOptions()
+        {
+            var serverOptions = new KestrelServerOptions();
+            serverOptions.ApplicationServices = new ServiceCollection().AddLogging().BuildServiceProvider();
+            return serverOptions;
+        }
+
+        [Fact]
+        public void UseHttpsDefaultsToDefaultCert()
+        {
+            var serverOptions = CreateServerOptions();
+            var defaultCert = new X509Certificate2(TestResources.TestCertificatePath, "testPassword");
+            serverOptions.OverrideDefaultCertificate(defaultCert);
+            serverOptions.ListenLocalhost(5000, options =>
+            {
+                options.UseHttps(opt =>
+                {
+                    Assert.Equal(defaultCert, opt.ServerCertificate);
+                });
+            });
+        }
+
+        [Fact]
+        public void ConfigureHttpsDefaultsOverridesDefaultCert()
+        {
+            var serverOptions = CreateServerOptions();
+            var defaultCert = new X509Certificate2(TestResources.TestCertificatePath, "testPassword");
+            serverOptions.OverrideDefaultCertificate(defaultCert);
+            serverOptions.ConfigureHttpsDefaults(options =>
+            {
+                Assert.Equal(defaultCert, options.ServerCertificate);
+                options.ServerCertificate = null;
+                options.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+            });
+            serverOptions.ListenLocalhost(5000, options =>
+            {
+                options.UseHttps(opt =>
+                {
+                    Assert.Null(opt.ServerCertificate);
+                    Assert.Equal(ClientCertificateMode.RequireCertificate, opt.ClientCertificateMode);
+
+                    // So UseHttps won't throw
+                    opt.ServerCertificate = defaultCert;
+                });
+            });
+        }
+
         [Fact]
         public async Task EmptyRequestLoggedAsInformation()
         {

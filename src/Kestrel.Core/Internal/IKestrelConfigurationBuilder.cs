@@ -3,6 +3,9 @@
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal
 {
+    /// <summary>
+    /// Used to provide delayed, replaceable configuration of KestrelServerOptions
+    /// </summary>
     public interface IKestrelConfigurationBuilder
     {
         void Build();

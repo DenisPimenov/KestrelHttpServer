@@ -55,7 +55,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Https.Internal
             }
         }
 
-        public static bool IsCertificateAllowedForServerAuth(X509Certificate2 certificate)
+        internal static bool IsCertificateAllowedForServerAuth(X509Certificate2 certificate)
         {
             /* If the Extended Key Usage extension is included, then we check that the serverAuth usage is included. (http://oid-info.com/get/1.3.6.1.5.5.7.3.1)
              * If the Extended Key Usage extension is not included, then we assume the certificate is allowed for all usages.

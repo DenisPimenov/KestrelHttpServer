@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.AspNetCore.Testing;
 using Microsoft.AspNetCore.Testing.xunit;
 using Microsoft.Extensions.DependencyInjection;
@@ -362,13 +364,40 @@ namespace Microsoft.AspNetCore.Server.Kestrel.FunctionalTests
             return RegisterDefaultServerAddresses_Success(new[] { "http://127.0.0.1:5000", "http://[::1]:5000" });
         }
 
-        private async Task RegisterDefaultServerAddresses_Success(IEnumerable<string> addresses)
+        [ConditionalFact]
+        [PortSupportedCondition(5000)]
+        [PortSupportedCondition(5001)]
+        public Task DefaultsServerAddress_BindsToIPv4WithHttps()
+        {
+            return RegisterDefaultServerAddresses_Success(
+                new[] { "http://127.0.0.1:5000", "https://127.0.0.1:5001" }, mockHttps: true);
+        }
+
+        [ConditionalFact]
+        [IPv6SupportedCondition]
+        [PortSupportedCondition(5000)]
+        [PortSupportedCondition(5001)]
+        public Task DefaultsServerAddress_BindsToIPv6WithHttps()
+        {
+            return RegisterDefaultServerAddresses_Success(new[] {
+                "http://127.0.0.1:5000", "http://[::1]:5000",
+                "https://127.0.0.1:5001", "https://[::1]:5001"},
+                mockHttps: true);
+        }
+
+        private async Task RegisterDefaultServerAddresses_Success(IEnumerable<string> addresses, bool mockHttps = false)
         {
             var testLogger = new TestApplicationErrorLogger();
 
             var hostBuilder = TransportSelector.GetWebHostBuilder()
                 .ConfigureLogging(_configureLoggingDelegate)
-                .UseKestrel()
+                .UseKestrel(options =>
+                {
+                    if (mockHttps)
+                    {
+                        options.OverrideDefaultCertificate(new X509Certificate2(TestResources.TestCertificatePath, "testPassword"));
+                    }
+                })
                 .ConfigureLogging(builder => builder
                     .AddProvider(new KestrelTestLoggerProvider(testLogger))
                     .SetMinimumLevel(LogLevel.Debug))
@@ -379,13 +408,19 @@ namespace Microsoft.AspNetCore.Server.Kestrel.FunctionalTests
                 host.Start();
 
                 Assert.Equal(5000, host.GetPort());
+
+                if (mockHttps)
+                {
+                    Assert.Contains(5001, host.GetPorts());
+                }
+
                 Assert.Single(testLogger.Messages, log => log.LogLevel == LogLevel.Debug &&
-                    string.Equals(CoreStrings.FormatBindingToDefaultAddress(Constants.DefaultServerAddress),
-                    log.Message, StringComparison.Ordinal));
+                    (string.Equals(CoreStrings.FormatBindingToDefaultAddresses(Constants.DefaultServerAddress, Constants.DefaultServerHttpsAddress), log.Message, StringComparison.Ordinal)
+                        || string.Equals(CoreStrings.FormatBindingToDefaultAddress(Constants.DefaultServerAddress), log.Message, StringComparison.Ordinal)));
 
                 foreach (var address in addresses)
                 {
-                    Assert.Equal(new Uri(address).ToString(), await HttpClientSlim.GetStringAsync(address));
+                    Assert.Equal(new Uri(address).ToString(), await HttpClientSlim.GetStringAsync(address, validateCertificate: false));
                 }
             }
         }
@@ -931,7 +966,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.FunctionalTests
             }
         }
 
-        [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+        [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
         private class PortSupportedConditionAttribute : Attribute, ITestCondition
         {
             private readonly int _port;
